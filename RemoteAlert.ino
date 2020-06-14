@@ -16,7 +16,7 @@ bool isPirLEDOn = false;
 
 TBMessage msg; //  Mensagem do Telegram a ser recebida 
 
-String hello = "Olá e bem vindo ao RemoteAlert!\nVocê será notificado sempre que detectarmos novos movimentos. Também será acionado o LED de alerta durante a presença dos movimentos.\nPara acender o led de alerta, envie 'Acender LED de alerta'. Para apagá-lo, envie 'Apagar LED de alerta'.";
+String hello = "Olá e bem vindo ao RemoteAlert!\nVocê será notificado sempre que detectarmos novos movimentos. Também serão acionados o LED de alerta e o alto falante do sistema durante a presença dos movimentos.\nPara acender o led de alerta, envie 'Acender LED de alerta'. Para apagá-lo, envie 'Apagar LED de alerta'.\nPara ligar o alarme sonoro do sistema, envie 'Ligar alarme sonoro'. Para desligá-lo, envie 'Desligar alarme sonoro'.\nPara ativar o modo silencioso do sistema, envie 'Ativar modo silencioso'; note que você não deixará de ser notificado de novos movimentos, apenas desativará o alto falante tornando o sistema mais difícil de ser detectado. Para desativar o modo, envie 'Desativar modo silencioso'."";
 
 void setup()
 {
@@ -25,7 +25,7 @@ void setup()
   Serial.println("\nInicializando RemoteAlert...");
 
   //  Conecta ao WiFi
-  raBot.wifiConnect(ssid, pass);
+  raBot.wifiConnect(ssid, pass); 
 
   //  Inicializa token do Telegram
   raBot.setTelegramToken(token);
@@ -82,6 +82,21 @@ void loop()
     raBot.sendMessage(msg.sender.id, "LED de alerta apagado");
   }
 
+  //  Ativa flag do alarme sonoro e envia mensagem ao usuário caso novo movimento tenha sido detectado e o sistema não esteja no modo silencioso
+  if (!isMuted && !isLoudSpeakerOn && pirValue == HIGH && previousPirValue == LOW)
+  {
+    isLoudSpeakerOn = true;
+    raBot.sendMessage(msg.sender.id, "Alarme sonoro ligado!");
+
+  }
+
+  //  Desativa flag do alarme sonoro e envia mensagem ao usuário caso movimentos deixem de ser detectados e o sistema não esteja no modo silencioso
+  else if (!isMuted && isLoudSpeakerOn && pirValue == LOW && previousPirValue == HIGH)
+  {
+    isLoudSpeakerOn = false;
+    raBot.sendMessage(msg.sender.id, "Alarme sonoro desligado!");
+  }
+
   //  Acende LED de alerta caso sua flag esteja ativada ou apaga-o caso contrário
   if(isPirLEDOn)
   {
@@ -90,6 +105,12 @@ void loop()
   else
   {
     digitalWrite(pirLED, LOW);
+  }
+
+  //  Liga alarme sonoro do sistema caso sua flag esteja ativa ou desliga-o caso contrário
+  if(isLoudSpeakerOn)
+  {
+    tone(loudSpeaker, 700, 100);
   }
 
   //  Checa novas mensagens
@@ -125,6 +146,78 @@ void loop()
       {
         raBot.sendMessage(msg.sender.id, "LED de alerta já apagado! Para acendê-lo, envie 'Acender LED de alerta'");
       }    
+    }
+
+    // Verifica se nova mensagem é, ignorando capitalização, "Ligar alarme sonoro"
+    else if (msg.text.equalsIgnoreCase("Ligar alarme sonoro"))
+    {
+      //  Envia mensagem ao usuário caso o sistema esteja em seu modo silencioso
+      if(isMuted)
+      {
+        raBot.sendMessage(msg.sender.id, "RemoteAlert está em seu modo silencioso! Para desativar o modo, envie 'Desativar modo silencioso'.\nNote que você não deixará de ser notificado de novos movimentos, apenas desativará o alto falante tornando o sistema mais difícil de ser detectado.");
+      }
+      //  Envia mensagem ao usuário caso o sistema não esteja no modo silencioso, mas o alarme sonoro já esteja ligado
+      else if (isLoudSpeakerOn)
+      {
+        raBot.sendMessage(msg.sender.id, "Alarme sonoro já ligado! Para desligá-lo, envie 'Desligar alarme sonoro'.");
+
+      }
+      //  Caso contrário, liga o alarme sonoro e envia mensagem ao usuário
+      else
+      {
+        isLoudSpeakerOn = true;
+        raBot.sendMessage(msg.sender.id, "Alarme sonoro ligado!");
+      }
+    }
+
+    // Verifica se nova mensagem é, ignorando capitalização, "Desligar alarme sonoro"
+    else if (msg.text.equalsIgnoreCase("Desligar alarme sonoro"))
+    {
+      //  Envia mensagem ao usuário caso o sistema esteja em seu modo silencioso
+      if(isMuted)
+      {
+        raBot.sendMessage(msg.sender.id, "RemoteAlert está em seu modo silencioso! Para desativar o modo, envie 'Desativar modo silencioso'.\nNote que você não deixará de ser notificado de novos movimentos, apenas desativará o alto falante tornando o sistema mais difícil de ser detectado.");
+      }
+      //  Desliga o alarme sonoro e envia mensagem ao usuário, caso o sistema não esteja em seu modo silencioso e o alarme sonoro esteja ligado
+      else if (isLoudSpeakerOn)
+      {
+        isLoudSpeakerOn = false;
+        raBot.sendMessage(msg.sender.id, "Alarme sonoro desligado!");
+      }
+      //  Envia mensagem ao usuário caso contrário
+      else
+      {
+        raBot.sendMessage(msg.sender.id, "Alarme sonoro já desligado! Para ligá-lo, envie 'Ligar alarme sonoro'.");
+      }
+    }
+
+    // Verifica se nova mensagem é, ignorando capitalização, "Ativar modo silencioso"
+    else if (msg.text.equalsIgnoreCase("Ativar modo silencioso"))
+    {
+      //  Envia mensagem ao usuário caso o sistema já esteja em seu modo silencioso
+      if (isMuted) {
+        raBot.sendMessage(msg.sender.id, "RemoteAlert já está em seu modo silencioso! Para desativar o modo, envie 'Desativar modo silencioso'.\nNote que você não deixará de ser notificado de novos movimentos, apenas desativará o alto falante tornando o sistema mais difícil de ser detectado.");
+      }
+      //  Ativa modo silencioso do sistema e envia mensagem do usuário, caso contrário
+      else {
+        isMuted = true;
+        raBot.sendMessage(msg.sender.id, "RemoteAlert está agora em seu modo silencioso! Para desativar o modo, envie 'Desativar modo silencioso'.\nNote que você não deixará de ser notificado de novos movimentos, apenas desativará o alto falante tornando o sistema mais difícil de ser detectado.");
+      }
+    }
+
+    // Verifica se nova mensagem é, ignorando capitalização, "Desativar modo silencioso"
+    else if (msg.text.equalsIgnoreCase("Desativar modo silencioso"))
+    {
+      //  Desativa modo silencioso do sistema e envia mensagem ao usuário, caso o sistema esteja em seu modo silencioso
+      if (isMuted) { 
+        isMuted = false;    
+        raBot.sendMessage(msg.sender.id, "Modo silencioso desativado! Para ativar o modo, envie 'Ativar modo silencioso'.\nNote que você não deixará de ser notificado de novos movimentos, apenas desativará o alto falante tornando o sistema mais difícil de ser detectado.");
+      }
+      //  Envia mensagem ao usuário, caso contrário
+      else {
+        raBot.sendMessage(msg.sender.id, "RemoteAlert não está modo silencioso! Para ativar o modo, envie 'Ativar modo silencioso'.\nNote que você não deixará de ser notificado de novos movimentos, apenas desativará o alto falante tornando o sistema mais difícil de ser detectado.");
+
+      }
     }
 
     //  Envia resposta genérica para qualquer outra mensagem
