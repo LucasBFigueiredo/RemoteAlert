@@ -13,6 +13,8 @@ int pirValue = LOW;
 int previousPirValue = LOW;
 
 bool isPirLEDOn = false;
+bool isLoudSpeakerOn = false;
+bool isMuted = false;
 
 TBMessage msg; //  Mensagem do Telegram a ser recebida 
 
