@@ -23,7 +23,7 @@ String hello = "Olá e bem vindo ao RemoteAlert!\nVocê será notificado sempre 
 void setup()
 {
   //  Inicializa monitor serial
-  Serial.begin(115200);
+  Serial.begin(9600);
   Serial.println("\nInicializando RemoteAlert...");
 
   //  Conecta ao WiFi
@@ -43,7 +43,7 @@ void setup()
   pinMode(PIR, INPUT);
 
   //  Envia mensagem inicial
-  raBot.sendMessage(msg.sender.id, reply);
+  raBot.sendMessage(msg.sender.id, hello);
 }
 
 void loop()
@@ -53,7 +53,7 @@ void loop()
   pirValue = digitalRead(PIR);
 
   //  Imprime no motor serial os estados atuais do 
-  Serial.prinln("\nera: ");
+  Serial.println("\nera: ");
   Serial.printf("%d",previousPirValue);
   Serial.println("agora é:");
   Serial.printf("%d",pirValue);
