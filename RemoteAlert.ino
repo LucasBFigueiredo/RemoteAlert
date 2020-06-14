@@ -18,7 +18,7 @@ bool isMuted = false;
 
 TBMessage msg; //  Mensagem do Telegram a ser recebida 
 
-String hello = "Olá e bem vindo ao RemoteAlert!\nVocê será notificado sempre que detectarmos novos movimentos. Também serão acionados o LED de alerta e o alto falante do sistema durante a presença dos movimentos.\nPara acender o led de alerta, envie 'Acender LED de alerta'. Para apagá-lo, envie 'Apagar LED de alerta'.\nPara ligar o alarme sonoro do sistema, envie 'Ligar alarme sonoro'. Para desligá-lo, envie 'Desligar alarme sonoro'.\nPara ativar o modo silencioso do sistema, envie 'Ativar modo silencioso'; note que você não deixará de ser notificado de novos movimentos, apenas desativará o alto falante tornando o sistema mais difícil de ser detectado. Para desativar o modo, envie 'Desativar modo silencioso'."";
+String hello = "Olá e bem vindo ao RemoteAlert!\nVocê será notificado sempre que detectarmos novos movimentos. Também serão acionados o LED de alerta e o alto falante do sistema durante a presença dos movimentos.\nPara acender o led de alerta, envie 'Acender LED de alerta'. Para apagá-lo, envie 'Apagar LED de alerta'.\nPara ligar o alarme sonoro do sistema, envie 'Ligar alarme sonoro'. Para desligá-lo, envie 'Desligar alarme sonoro'.\nPara ativar o modo silencioso do sistema, envie 'Ativar modo silencioso'; note que você não deixará de ser notificado de novos movimentos, apenas desativará o alto falante tornando o sistema mais difícil de ser detectado. Para desativar o modo, envie 'Desativar modo silencioso'.";
 
 void setup()
 {
@@ -112,7 +112,7 @@ void loop()
   //  Liga alarme sonoro do sistema caso sua flag esteja ativa ou desliga-o caso contrário
   if(isLoudSpeakerOn)
   {
-    tone(loudSpeaker, 700, 100);
+    tone(loudSpeaker, 1200, 900);
   }
 
   //  Checa novas mensagens
