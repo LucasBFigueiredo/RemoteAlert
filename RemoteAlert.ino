@@ -1,4 +1,5 @@
-#include "CTBot.h"
+#include <CTBot.h>
+#include <ESP8266WiFi.h>
 #include <PubSubClient.h>
 
 CTBot raBot;
@@ -7,7 +8,7 @@ String ssid  = ""; // Nome do Wi-Fi
 String pass  = "";  // Senha do Wi-Fi
 String token = "";  // Token do bot do Telegram
 String mqttServer = ""; // Rota do broker MQTT. Local: 'localhost'. Remoto: ''.
-String mqttServerPort = ""; // Porta do broker MQTT. Local: '1883'. Remoto: ''.
+int mqttServerPort = ; // Porta do broker MQTT. Local: 1883. Remoto: ''.
 
 int PIR = D2;
 int pirLED = D1;
