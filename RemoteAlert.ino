@@ -3,9 +3,9 @@
 
 CTBot raBot;
 
-String ssid  = ""; // Nome do wifi e apagar comentario
-String pass  = "";  // Senha do wifi e apagar comentario
-String token = "";  // Token do bot e apagar comentario
+String ssid  = ""; // Nome do Wi-Fi
+String pass  = "";  // Senha do Wi-Fi
+String token = "";  // Token do bot do Telegram
 String mqttServer = ""; // Rota do broker MQTT. Local: 'localhost'. Remoto: ''.
 String mqttServerPort = ""; // Porta do broker MQTT. Local: '1883'. Remoto: ''.
 
@@ -57,6 +57,7 @@ void setup()
   client.setCallback(callback);
 }
 
+//  Rotina de callback (o que fazer quando receber mensagem MQTT)
 void callback(String topic, byte* message, unsigned int length)
 {
   Serial.print("Mensagem recebida no topico: ");
