@@ -1,10 +1,13 @@
 #include "CTBot.h"
+#include <PubSubClient.h>
 
 CTBot raBot;
 
-String ssid  = ""; // Colocar nome do wifi e apagar comentario
-String pass  = "";  // Colocar senha do wifi e apagar comentario
-String token = "";  // Colocar token do bot e apagar comentario
+String ssid  = ""; // Nome do wifi e apagar comentario
+String pass  = "";  // Senha do wifi e apagar comentario
+String token = "";  // Token do bot e apagar comentario
+String mqttServer = ""; // Rota do broker MQTT. Local: 'localhost'. Remoto: ''.
+String mqttServerPort = ""; // Porta do broker MQTT. Local: '1883'. Remoto: ''.
 
 int PIR = D2;
 int pirLED = D1;
@@ -17,6 +20,10 @@ bool isLoudSpeakerOn = false;
 bool isMuted = false;
 
 TBMessage msg; //  Mensagem do Telegram a ser recebida 
+
+//  Define cliente MQTT
+WiFiClient espClient;
+PubSubClient client(espClient);
 
 String hello = "Olá e bem vindo ao RemoteAlert!\nVocê será notificado sempre que detectarmos novos movimentos. Também serão acionados o LED de alerta e o alto falante do sistema durante a presença dos movimentos.\nPara acender o led de alerta, envie 'Acender LED de alerta'. Para apagá-lo, envie 'Apagar LED de alerta'.\nPara ligar o alarme sonoro do sistema, envie 'Ligar alarme sonoro'. Para desligá-lo, envie 'Desligar alarme sonoro'.\nPara ativar o modo silencioso do sistema, envie 'Ativar modo silencioso'; note que você não deixará de ser notificado de novos movimentos, apenas desativará o alto falante tornando o sistema mais difícil de ser detectado. Para desativar o modo, envie 'Desativar modo silencioso'.";
 
@@ -42,12 +49,71 @@ void setup()
   pinMode(pirLED, OUTPUT);
   pinMode(PIR, INPUT);
 
-  //  Envia mensagem inicial
+  //  Envia mensagem do Telegram inicial
   raBot.sendMessage(msg.sender.id, hello);
+
+  //  Define broker MQTT e rotina de callback para mensagens recebidas
+  client.setServer(mqttServer, mqttServerPort);
+  client.setCallback(callback);
+}
+
+void callback(String topic, byte* message, unsigned int length)
+{
+  Serial.print("Mensagem recebida no topico: ");
+  Serial.print(topic);
+  Serial.print(". Mensagem: ");
+  String messageTemp;
+
+  for (int i = 0; i < length; i++)
+  {
+    Serial.print((char)message[i]);
+    messageTemp += (char)message[i];
+  }
+  Serial.println();
+
+  if(topic=="remoteAlert/modoSilencioso")
+  {
+    if(messageTemp == "on")
+    {
+      if(isMuted)
+      {
+       Serial.println("Modo silencioso do sistema ja ativado.");
+      }
+      else
+      {
+       Serial.println("Ativando modo silencioso do sistema.");
+       isMuted = true;
+       raBot.sendMessage(msg.sender.id, "RemoteAlert está agora em seu modo silencioso! Para desativar o modo, utilize o dashboard do sistema.\nNote que você não deixará de ser notificado de novos movimentos, apenas desativará o alto falante tornando o sistema mais difícil de ser detectado.");
+      }
+    }
+    if(messageTemp == "off")
+    {
+      if(isMuted)
+      {
+       Serial.println("Desativando modo silencioso do sistema.");
+       isMuted = false;
+       raBot.sendMessage(msg.sender.id, "Modo silencioso desativado! Para ativar o modo, utilize o dashboard do sistema.\nNote que você não deixará de ser notificado de novos movimentos, apenas desativará o alto falante tornando o sistema mais difícil de ser detectado.");
+  
+      }
+      else
+      {
+       Serial.println("Modo silencioso do sistema ja desativado.");
+      }
+    }
+
+    
+  }
 }
 
 void loop()
-{  
+{ 
+  //  Valida conexão com cliente MQTT
+  if (!client.connected())
+  {
+    reconnect();
+  }
+  client.loop();
+  
   //  Lê sensor PIR e atualiza variáveis
   previousPirValue = pirValue;
   pirValue = digitalRead(PIR);
@@ -115,7 +181,7 @@ void loop()
     tone(loudSpeaker, 1200, 900);
   }
 
-  //  Checa novas mensagens
+  //  Checa novas mensagens do Telegram 
   if (raBot.getNewMessage(msg))
   {
     //  Verifica se nova mensagem é, ignorando capitalização, "Acender LED de alerta"
@@ -193,42 +259,16 @@ void loop()
       }
     }
 
-    // Verifica se nova mensagem é, ignorando capitalização, "Ativar modo silencioso"
-    else if (msg.text.equalsIgnoreCase("Ativar modo silencioso"))
-    {
-      //  Envia mensagem ao usuário caso o sistema já esteja em seu modo silencioso
-      if (isMuted) {
-        raBot.sendMessage(msg.sender.id, "RemoteAlert já está em seu modo silencioso! Para desativar o modo, envie 'Desativar modo silencioso'.\nNote que você não deixará de ser notificado de novos movimentos, apenas desativará o alto falante tornando o sistema mais difícil de ser detectado.");
-      }
-      //  Ativa modo silencioso do sistema e envia mensagem do usuário, caso contrário
-      else {
-        isMuted = true;
-        raBot.sendMessage(msg.sender.id, "RemoteAlert está agora em seu modo silencioso! Para desativar o modo, envie 'Desativar modo silencioso'.\nNote que você não deixará de ser notificado de novos movimentos, apenas desativará o alto falante tornando o sistema mais difícil de ser detectado.");
-      }
-    }
-
-    // Verifica se nova mensagem é, ignorando capitalização, "Desativar modo silencioso"
-    else if (msg.text.equalsIgnoreCase("Desativar modo silencioso"))
-    {
-      //  Desativa modo silencioso do sistema e envia mensagem ao usuário, caso o sistema esteja em seu modo silencioso
-      if (isMuted) { 
-        isMuted = false;    
-        raBot.sendMessage(msg.sender.id, "Modo silencioso desativado! Para ativar o modo, envie 'Ativar modo silencioso'.\nNote que você não deixará de ser notificado de novos movimentos, apenas desativará o alto falante tornando o sistema mais difícil de ser detectado.");
-      }
-      //  Envia mensagem ao usuário, caso contrário
-      else {
-        raBot.sendMessage(msg.sender.id, "RemoteAlert não está modo silencioso! Para ativar o modo, envie 'Ativar modo silencioso'.\nNote que você não deixará de ser notificado de novos movimentos, apenas desativará o alto falante tornando o sistema mais difícil de ser detectado.");
-
-      }
-    }
-
     //  Envia resposta genérica para qualquer outra mensagem
     else
     {
       raBot.sendMessage(msg.sender.id, hello);
     }
   }
+
+  //  Publica mensagem contendo valor atual do PIR no tópico remoteAlert/alertaMovimento
+  client.publish("remoteAlert/alertaMovimento");
   
-  //  Espera 0.1 segundos
-  delay(100);
+  //  Espera 0.5 segundos
+  delay(500);
 }

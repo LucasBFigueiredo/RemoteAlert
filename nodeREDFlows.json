@@ -1,0 +1,166 @@
+[
+    {
+        "id": "1ca39ac2.18f565",
+        "type": "tab",
+        "label": "Flow 1",
+        "disabled": false,
+        "info": ""
+    },
+    {
+        "id": "65cd5cb.d4d7ea4",
+        "type": "ui_switch",
+        "z": "1ca39ac2.18f565",
+        "name": "ModoSilencioso",
+        "label": "Modo Silencioso",
+        "tooltip": "Ativa ou desativa o modo silencioso do sistema",
+        "group": "f0e08284.f7de4",
+        "order": 0,
+        "width": 0,
+        "height": 0,
+        "passthru": true,
+        "decouple": "false",
+        "topic": "remoteAlert/modoSilencioso",
+        "style": "",
+        "onvalue": "on",
+        "onvalueType": "str",
+        "onicon": "",
+        "oncolor": "",
+        "offvalue": "off",
+        "offvalueType": "str",
+        "officon": "",
+        "offcolor": "",
+        "x": 160,
+        "y": 120,
+        "wires": [
+            [
+                "3e28d8e2.e256b8"
+            ]
+        ]
+    },
+    {
+        "id": "3e28d8e2.e256b8",
+        "type": "mqtt out",
+        "z": "1ca39ac2.18f565",
+        "name": "ModoSilencioso",
+        "topic": "remoteAlert/modoSilencioso",
+        "qos": "2",
+        "retain": "",
+        "broker": "b8ae93d3.bed77",
+        "x": 380,
+        "y": 120,
+        "wires": []
+    },
+    {
+        "id": "894d177d.d12478",
+        "type": "mqtt in",
+        "z": "1ca39ac2.18f565",
+        "name": "AlertaMovimento",
+        "topic": "remoteAlert/alertaMovimento",
+        "qos": "2",
+        "datatype": "auto",
+        "broker": "b8ae93d3.bed77",
+        "x": 160,
+        "y": 260,
+        "wires": [
+            [
+                "da3dac00.215a18"
+            ]
+        ]
+    },
+    {
+        "id": "da3dac00.215a18",
+        "type": "ui_chart",
+        "z": "1ca39ac2.18f565",
+        "name": "AlertaMovimento",
+        "group": "3898b42b.f4916c",
+        "order": 0,
+        "width": 0,
+        "height": 0,
+        "label": "Presença de movimentos perto do sensor",
+        "chartType": "line",
+        "legend": "false",
+        "xformat": "HH:mm:ss",
+        "interpolate": "linear",
+        "nodata": "",
+        "dot": false,
+        "ymin": "",
+        "ymax": "1",
+        "removeOlder": 1,
+        "removeOlderPoints": "",
+        "removeOlderUnit": "3600",
+        "cutout": 0,
+        "useOneColor": false,
+        "useUTC": false,
+        "colors": [
+            "#1f77b4",
+            "#aec7e8",
+            "#ff7f0e",
+            "#2ca02c",
+            "#98df8a",
+            "#d62728",
+            "#ff9896",
+            "#9467bd",
+            "#c5b0d5"
+        ],
+        "useOldStyle": false,
+        "outputs": 1,
+        "x": 370,
+        "y": 260,
+        "wires": [
+            []
+        ]
+    },
+    {
+        "id": "f0e08284.f7de4",
+        "type": "ui_group",
+        "z": "",
+        "name": "ModoSilencioso",
+        "tab": "c70fb269.44ee2",
+        "order": 1,
+        "disp": true,
+        "width": "6",
+        "collapse": false
+    },
+    {
+        "id": "b8ae93d3.bed77",
+        "type": "mqtt-broker",
+        "z": "",
+        "name": "",
+        "broker": "localhost",
+        "port": "1883",
+        "clientid": "",
+        "usetls": false,
+        "compatmode": false,
+        "keepalive": "60",
+        "cleansession": true,
+        "birthTopic": "",
+        "birthQos": "0",
+        "birthPayload": "",
+        "closeTopic": "",
+        "closeQos": "0",
+        "closePayload": "",
+        "willTopic": "",
+        "willQos": "0",
+        "willPayload": ""
+    },
+    {
+        "id": "3898b42b.f4916c",
+        "type": "ui_group",
+        "z": "",
+        "name": "AlertaMovimento",
+        "tab": "c70fb269.44ee2",
+        "order": 2,
+        "disp": true,
+        "width": "6",
+        "collapse": false
+    },
+    {
+        "id": "c70fb269.44ee2",
+        "type": "ui_tab",
+        "z": "",
+        "name": "RemoteAlert",
+        "icon": "dashboard",
+        "disabled": false,
+        "hidden": false
+    }
+]
