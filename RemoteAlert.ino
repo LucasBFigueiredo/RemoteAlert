@@ -7,7 +7,7 @@ CTBot raBot;
 String ssid  = ""; // Nome do Wi-Fi
 String pass  = "";  // Senha do Wi-Fi
 String token = "";  // Token do bot do Telegram
-String mqttServer = ""; // Rota do broker MQTT. Local: 'localhost'. Remoto: ''.
+char* mqttServer = ""; // Rota do broker MQTT. Local: 'localhost'. Remoto: ''.
 int mqttServerPort = ; // Porta do broker MQTT. Local: 1883. Remoto: ''.
 
 int PIR = D2;
@@ -338,7 +338,7 @@ void loop()
   }
 
   //  Publica mensagem contendo valor atual do PIR no tópico remoteAlert/alertaMovimento
-  client.publish("remoteAlert/alertaMovimento");
+  client.publish("remoteAlert/alertaMovimento", (char*)pirValue);
   
   //  Espera 0.5 segundos
   delay(500);
