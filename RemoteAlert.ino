@@ -28,34 +28,21 @@ PubSubClient client(espClient);
 
 String hello = "Olá e bem vindo ao RemoteAlert!\nVocê será notificado sempre que detectarmos novos movimentos. Também serão acionados o LED de alerta e o alto falante do sistema durante a presença dos movimentos.\nPara acender o led de alerta, envie 'Acender LED de alerta'. Para apagá-lo, envie 'Apagar LED de alerta'.\nPara ligar o alarme sonoro do sistema, envie 'Ligar alarme sonoro'. Para desligá-lo, envie 'Desligar alarme sonoro'.\nPara ativar o modo silencioso do sistema, envie 'Ativar modo silencioso'; note que você não deixará de ser notificado de novos movimentos, apenas desativará o alto falante tornando o sistema mais difícil de ser detectado. Para desativar o modo, envie 'Desativar modo silencioso'.";
 
-void setup()
-{
-  //  Inicializa monitor serial
-  Serial.begin(9600);
-  Serial.println("\nInicializando RemoteAlert...");
-
-  //  Conecta ao WiFi
-  raBot.wifiConnect(ssid, pass); 
-
-  //  Inicializa token do Telegram
-  raBot.setTelegramToken(token);
-
-  //  Testa conecção
-  if (raBot.testConnection())
-    Serial.println("Conecção realizada com sucesso!");
-  else
-    Serial.println("Falha na conecção!");
-
-  //  Prepara E/S
-  pinMode(pirLED, OUTPUT);
-  pinMode(PIR, INPUT);
-
-  //  Envia mensagem do Telegram inicial
-  raBot.sendMessage(msg.sender.id, hello);
-
-  //  Define broker MQTT e rotina de callback para mensagens recebidas
-  client.setServer(mqttServer, mqttServerPort);
-  client.setCallback(callback);
+// Don't change the function below. This functions connects your ESP8266 to your router
+void setup_wifi() {
+  delay(10);
+  // We start by connecting to a WiFi network
+  Serial.println();
+  Serial.print("Connecting to ");
+  Serial.println(ssid);
+  WiFi.begin(ssid, pass);
+  while (WiFi.status() != WL_CONNECTED) {
+    delay(500);
+    Serial.print(".");
+  }
+  Serial.println("");
+  Serial.print("WiFi connected - ESP IP address: ");
+  Serial.println(WiFi.localIP());
 }
 
 //  Rotina de callback (o que fazer quando receber mensagem MQTT)
@@ -107,14 +94,96 @@ void callback(String topic, byte* message, unsigned int length)
   }
 }
 
+void reconnect() {
+  // Loop until we're reconnected
+  while (!client.connected()) {
+    Serial.print("Attempting MQTT connection...");
+    // Attempt to connect
+    
+    if (client.connect("ESP8266Client")) {
+      Serial.println("connected");  
+      // Subscribe or resubscribe to a topic
+      // You can subscribe to more topics (to control more LEDs in this example)
+      client.subscribe("remoteAlert/modoSilencioso");
+    } else {
+      Serial.print("failed, rc=");
+      Serial.print(client.state());
+      Serial.println(" try again in 5 seconds");
+      // Wait 1 second before retrying
+      delay(1000);
+    }
+  }
+}
+
+void setup()
+{
+  //  Inicializa monitor serial
+  Serial.begin(9600);
+  Serial.println("\nInicializando RemoteAlert...");
+
+  //  Conecta bot ao WiFi
+  raBot.wifiConnect(ssid, pass); 
+
+  //  Inicializa token do Telegram
+  raBot.setTelegramToken(token);
+
+  //  Testa conecção
+  if (raBot.testConnection())
+    Serial.println("Conecção realizada com sucesso!");
+  else
+    Serial.println("Falha na conecção!");
+
+  //  Prepara E/S
+  pinMode(pirLED, OUTPUT);
+  pinMode(PIR, INPUT);
+
+  //  Envia mensagem do Telegram inicial
+  raBot.sendMessage(msg.sender.id, hello);
+
+  //  Define broker MQTT e rotina de callback para mensagens recebidas
+  setup_wifi();
+  client.setServer(mqttServer, mqttServerPort);
+  client.setCallback(callback);
+}
+
+void setup()
+{
+  //  Inicializa monitor serial
+  Serial.begin(9600);
+  Serial.println("\nInicializando RemoteAlert...");
+
+  //  Conecta ao WiFi
+  raBot.wifiConnect(ssid, pass); 
+
+  //  Inicializa token do Telegram
+  raBot.setTelegramToken(token);
+
+  //  Testa conecção
+  if (raBot.testConnection())
+    Serial.println("Conecção realizada com sucesso!");
+  else
+    Serial.println("Falha na conecção!");
+
+  //  Prepara E/S
+  pinMode(pirLED, OUTPUT);
+  pinMode(PIR, INPUT);
+
+  //  Envia mensagem do Telegram inicial
+  raBot.sendMessage(msg.sender.id, hello);
+
+  //  Define broker MQTT e rotina de callback para mensagens recebidas
+  client.setServer(mqttServer, mqttServerPort);
+  client.setCallback(callback);
+}
+
 void loop()
 { 
   //  Valida conexão com cliente MQTT
-  if (!client.connected())
-  {
+  if (!client.connected()) {
     reconnect();
   }
-  client.loop();
+  if(!client.loop())
+    client.connect("ESP8266Client");
   
   //  Lê sensor PIR e atualiza variáveis
   previousPirValue = pirValue;
