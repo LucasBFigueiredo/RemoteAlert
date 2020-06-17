@@ -4,18 +4,22 @@
 
 CTBot raBot;
 
-String ssid  = "Macadura 2G"; // Nome do Wi-Fi
-String pass  = "filhos2017";  // Senha do Wi-Fi
-String token = "825651753:AAESqoa1m0QbqcewinCoejvk-7bpPWZ0d1I";  // Token do bot do Telegram
-char* mqttServer = "127.0.0.1"; // Rota do broker MQTT. Local: 'localhost'. Remoto: ''.
+String ssid  = ""; // Nome do Wi-Fi
+String pass  = "";  // Senha do Wi-Fi
+String token = "";  // Token do bot do Telegram
+char* mqttServer = "127.0.0.1"; // Rota do broker MQTT. Local: '127.0.0.1'. Remoto: ''.
 int mqttServerPort = 1883; // Porta do broker MQTT. Local: 1883. Remoto: ''.
 
+//  Define pinos de sensor e atuadores
 int PIR = D2;
 int pirLED = D1;
 int loudSpeaker = D3;
+
+//  Define valores iniciais para as variáveis de monitoramento interno do PIR
 int pirValue = LOW;
 int previousPirValue = LOW;
 
+//  Define flags de atuadores inicialmente como false
 bool isPirLEDOn = false;
 bool isLoudSpeakerOn = false;
 bool isMuted = false;
@@ -26,25 +30,32 @@ TBMessage msg; //  Mensagem do Telegram a ser recebida
 WiFiClient espClient;
 PubSubClient client(espClient);
 
-String hello = "Olá e bem vindo ao RemoteAlert!\nVocê será notificado sempre que detectarmos novos movimentos. Também serão acionados o LED de alerta e o alto falante do sistema durante a presença dos movimentos.\nPara acender o led de alerta, envie 'Acender LED de alerta'. Para apagá-lo, envie 'Apagar LED de alerta'.\nPara ligar o alarme sonoro do sistema, envie 'Ligar alarme sonoro'. Para desligá-lo, envie 'Desligar alarme sonoro'.\nPara ativar o modo silencioso do sistema, envie 'Ativar modo silencioso'; note que você não deixará de ser notificado de novos movimentos, apenas desativará o alto falante tornando o sistema mais difícil de ser detectado. Para desativar o modo, envie 'Desativar modo silencioso'.";
+String hello = "Olá e bem vindo ao RemoteAlert!\nVocê será notificado sempre que detectarmos novos movimentos. Também serão acionados o LED de alerta e o alto falante do sistema durante a presença dos movimentos.\nPara acender o led de alerta, envie 'Acender LED de alerta'. Para apagá-lo, envie 'Apagar LED de alerta'.\nPara ligar o alarme sonoro do sistema, envie 'Ligar alarme sonoro'. Para desligá-lo, envie 'Desligar alarme sonoro'.\nPara ativar/desativar o modo silencioso, utilize o dashboard do sistema; note que você não deixará de ser notificado de novos movimentos, apenas desativará o alto falante tornando o sistema mais difícil de ser detectado.";
 
-// Don't change the function below. This functions connects your ESP8266 to your router
-void setup_wifi() {
-  delay(10);
-  // We start by connecting to a WiFi network
+//  Conecta ESP8266 ao WiFi
+void setupWiFi() 
+{
+  //  Imprime ssid no monitor serial
   Serial.println();
-  Serial.print("Connecting to ");
+  Serial.print("Conectando-se a ");
   Serial.println(ssid);
 
-  WiFi.mode(WIFI_STA); 
-  WiFi.begin(ssid, pass);
+  WiFi.mode(WIFI_STA); // Define WiFi como estatico
+  
+  WiFi.begin(ssid, pass); // Inicia rotina de conexao ao WiFi
+
+  //  Imprime '.' enquanto a conexao nao for estabelecida
   while (WiFi.status() != WL_CONNECTED) {
     delay(500);
     Serial.print(".");
   }
+
+  //  Imprime IP do ESP8266 agora conectado ao WiFi
   Serial.println("");
-  Serial.print("WiFi connected - ESP IP address: ");
+  Serial.print("WiFi conectado! - Endereco de IP do ESP8266: ");
   Serial.println(WiFi.localIP());
+
+  delay(10);
 }
 
 //  Rotina de callback (o que fazer quando receber mensagem MQTT)
@@ -77,7 +88,7 @@ void callback(String topic, byte* message, unsigned int length)
        raBot.sendMessage(msg.sender.id, "RemoteAlert está agora em seu modo silencioso! Para desativar o modo, utilize o dashboard do sistema.\nNote que você não deixará de ser notificado de novos movimentos, apenas desativará o alto falante tornando o sistema mais difícil de ser detectado.");
       }
     }
-    if(messageTemp == "off")
+    else if(messageTemp == "off")
     {
       if(isMuted)
       {
@@ -96,23 +107,31 @@ void callback(String topic, byte* message, unsigned int length)
   }
 }
 
-void reconnect() {
-  // Loop until we're reconnected
-  while (!client.connected()) {
-    Serial.print("Attempting MQTT connection...");
-    // Attempt to connect
-    WiFi.mode(WIFI_STA); 
-    if (client.connect("ESP8266ClientRA")) {
-      Serial.println("connected");  
-      // Subscribe or resubscribe to a topic
-      // You can subscribe to more topics (to control more LEDs in this example)
+//  Refaz coneccao do ESP8266 com broker MQTT
+void reconnectMQTT()
+{
+  //  Executa rotina enquanto cliente nao estiver conectado ao broker
+  while (!client.connected())
+  {
+    Serial.print("Tentando conectar cliente ao broker MQTT...");
+    
+    WiFi.mode(WIFI_STA); // Define WiFi como estatico
+
+    // Tenta se conectar e, caso consiga, se inscreve no topico 'remoteAlert/modoSilencioso'
+    if (client.connect("ESP8266ClientRA"))
+    {
+      Serial.println("conectado");  
+      
       client.subscribe("remoteAlert/modoSilencioso");
-    } else {
-      Serial.print("failed, rc=");
+    } 
+    //  Imprime mensagem de erro, caso contrario
+    else 
+    {
+      Serial.print("falhou, rc=");
       Serial.print(client.state());
-      Serial.println(" try again in 1 second");
-      // Wait 1 second before retrying
-      delay(5000);
+      Serial.println("tente novamente em 2 segundos");
+      
+      delay(2000);
     }
   }
 }
@@ -122,9 +141,11 @@ void setup()
   //  Inicializa monitor serial
   Serial.begin(9600);
   Serial.println("\nInicializando RemoteAlert...");
-
+  
+  // Conecta ESP8266 ao WiFi
+  setupWiFi(); 
+  
   //  Define broker MQTT e rotina de callback para mensagens recebidas
-  setup_wifi();
   client.setServer(mqttServer, mqttServerPort);
   client.setCallback(callback);
 
@@ -135,56 +156,53 @@ void setup()
   if (raBot.testConnection())
     Serial.println("Bot Telegram conectado com sucesso!");
   else
-    Serial.println("Falha na conecção, bot Telegram não conectado!");
+    Serial.println("Falha na coneccao, bot Telegram nao conectado!");
 
   //  Prepara E/S
   pinMode(pirLED, OUTPUT);
   pinMode(PIR, INPUT);
-
-  //  Envia mensagem do Telegram inicial
-  raBot.sendMessage(msg.sender.id, hello);
 }
 
 void loop()
 { 
-  //  Valida conexão com cliente MQTT
-    if (!client.connected()) {
-      reconnect();
-    }
-    if(!client.loop())
-      client.connect("ESP8266Client");
+  //  Valida conexão com cliente MQTT e reconecta caso necessario
+  if (!client.connected()) {
+    reconnectMQTT();
+  }
+  if(!client.loop())
+    client.connect("ESP8266ClientRA");
   
   //  Lê sensor PIR e atualiza variáveis
   previousPirValue = pirValue;
   pirValue = digitalRead(PIR);
   
-  //  Envia mengagem ao usuário caso novo movimento tenha sido detectado
+  //  Envia mengagem ao usuário via Telegram caso novo movimento tenha sido detectado
   if (pirValue == HIGH && previousPirValue == LOW)
   {
     raBot.sendMessage(msg.sender.id, "Alerta de movimento!");
   }
 
-  //  Envia mensagem ao usuário caso movimentos deixem de ser detectados
+  //  Envia mensagem ao usuário via Telegram caso movimentos deixem de ser detectados
   else if (pirValue == LOW && previousPirValue == HIGH)
   {
     raBot.sendMessage(msg.sender.id, "Alerta de movimento encerrado!");
   }
 
-  //  Ativa flag do LED de alerta e envia mensagem ao usuário novo movimento tenha sido detectado
+  //  Ativa flag do LED de alerta e envia mensagem ao usuário via Telegram novo movimento tenha sido detectado
   if (!isPirLEDOn && pirValue == HIGH && previousPirValue == LOW) 
   {
     isPirLEDOn = true;
     raBot.sendMessage(msg.sender.id, "LED de alerta aceso!");
   }
   
-  //  Desativa flag do LED de alerta e envia mensagem ao usuário caso movimentos deixem de ser detectados
+  //  Desativa flag do LED de alerta e envia mensagem ao usuário via Telegram caso movimentos deixem de ser detectados
   else if (isPirLEDOn && pirValue == LOW && previousPirValue == HIGH) 
   {
     isPirLEDOn = false;
     raBot.sendMessage(msg.sender.id, "LED de alerta apagado");
   }
 
-  //  Ativa flag do alarme sonoro e envia mensagem ao usuário caso novo movimento tenha sido detectado e o sistema não esteja no modo silencioso
+  //  Ativa flag do alarme sonoro e envia mensagem ao usuário via Telegram caso novo movimento tenha sido detectado e o sistema não esteja no modo silencioso
   if (!isMuted && !isLoudSpeakerOn && pirValue == HIGH && previousPirValue == LOW)
   {
     isLoudSpeakerOn = true;
@@ -192,7 +210,7 @@ void loop()
 
   }
 
-  //  Desativa flag do alarme sonoro e envia mensagem ao usuário caso movimentos deixem de ser detectados e o sistema não esteja no modo silencioso
+  //  Desativa flag do alarme sonoro e envia mensagem ao usuário via Telegram caso movimentos deixem de ser detectados e o sistema não esteja no modo silencioso
   else if (!isMuted && isLoudSpeakerOn && pirValue == LOW && previousPirValue == HIGH)
   {
     isLoudSpeakerOn = false;
@@ -300,8 +318,8 @@ void loop()
     }
   }
 
- //  Publica mensagem contendo valor atual do PIR no tópico remoteAlert/alertaMovimento
-    client.publish("remoteAlert/alertaMovimento", (char*)pirValue);
+  //  Publica mensagem contendo valor atual do PIR no tópico remoteAlert/alertaMovimento
+  client.publish("remoteAlert/alertaMovimento", (char*)pirValue);
   
   //  Espera 0.5 segundos
   delay(500);
