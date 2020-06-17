@@ -108,7 +108,7 @@ void reconnect() {
     } else {
       Serial.print("failed, rc=");
       Serial.print(client.state());
-      Serial.println(" try again in 5 seconds");
+      Serial.println(" try again in 1 second");
       // Wait 1 second before retrying
       delay(1000);
     }
@@ -146,36 +146,6 @@ void setup()
   client.setCallback(callback);
 }
 
-void setup()
-{
-  //  Inicializa monitor serial
-  Serial.begin(9600);
-  Serial.println("\nInicializando RemoteAlert...");
-
-  //  Conecta ao WiFi
-  raBot.wifiConnect(ssid, pass); 
-
-  //  Inicializa token do Telegram
-  raBot.setTelegramToken(token);
-
-  //  Testa conecção
-  if (raBot.testConnection())
-    Serial.println("Conecção realizada com sucesso!");
-  else
-    Serial.println("Falha na conecção!");
-
-  //  Prepara E/S
-  pinMode(pirLED, OUTPUT);
-  pinMode(PIR, INPUT);
-
-  //  Envia mensagem do Telegram inicial
-  raBot.sendMessage(msg.sender.id, hello);
-
-  //  Define broker MQTT e rotina de callback para mensagens recebidas
-  client.setServer(mqttServer, mqttServerPort);
-  client.setCallback(callback);
-}
-
 void loop()
 { 
   //  Valida conexão com cliente MQTT
@@ -188,12 +158,6 @@ void loop()
   //  Lê sensor PIR e atualiza variáveis
   previousPirValue = pirValue;
   pirValue = digitalRead(PIR);
-
-  //  Imprime no motor serial os estados atuais do 
-  Serial.println("\nera: ");
-  Serial.printf("%d",previousPirValue);
-  Serial.println("agora é:");
-  Serial.printf("%d",pirValue);
   
   //  Envia mengagem ao usuário caso novo movimento tenha sido detectado
   if (pirValue == HIGH && previousPirValue == LOW)
