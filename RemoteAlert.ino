@@ -35,6 +35,8 @@ void setup_wifi() {
   Serial.println();
   Serial.print("Connecting to ");
   Serial.println(ssid);
+
+  WiFi.mode(WIFI_STA); 
   WiFi.begin(ssid, pass);
   while (WiFi.status() != WL_CONNECTED) {
     delay(500);
@@ -99,7 +101,7 @@ void reconnect() {
   while (!client.connected()) {
     Serial.print("Attempting MQTT connection...");
     // Attempt to connect
-    
+    WiFi.mode(WIFI_STA); 
     if (client.connect("ESP8266Client")) {
       Serial.println("connected");  
       // Subscribe or resubscribe to a topic
