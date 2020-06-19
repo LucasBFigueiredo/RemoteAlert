@@ -4,10 +4,10 @@
 
 CTBot raBot;
 
-String ssid  = ""; // Nome do Wi-Fi
-String pass  = "";  // Senha do Wi-Fi
-String token = "";  // Token do bot do Telegram
-char* mqttServer = "127.0.0.1"; // Rota do broker MQTT. Local: '127.0.0.1'. Remoto: ''.
+const char* ssid  = ""; // Nome do Wi-Fi
+const char* pass  = "";  // Senha do Wi-Fi
+const char* token = "";  // Token do bot do Telegram
+const char* mqttServer = ""; // Rota do broker MQTT. Local: '127.0.0.1'. Remoto: 'broker.mqtt-dashboard.com' (broker publico, apenas para testes).
 int mqttServerPort = 1883; // Porta do broker MQTT. Local: 1883. Remoto: ''.
 
 //  Define pinos de sensor e atuadores
@@ -26,9 +26,8 @@ bool isMuted = false;
 
 TBMessage msg; //  Mensagem do Telegram a ser recebida 
 
-//  Define cliente MQTT
-WiFiClient espClient;
-PubSubClient client(espClient);
+WiFiClient espClient; // Define cliente WiFi
+PubSubClient client(espClient); // Define cliente MQTT (rodando sobre TCP/IP)
 
 String hello = "Olá e bem vindo ao RemoteAlert!\nVocê será notificado sempre que detectarmos novos movimentos. Também serão acionados o LED de alerta e o alto falante do sistema durante a presença dos movimentos.\nPara acender o led de alerta, envie 'Acender LED de alerta'. Para apagá-lo, envie 'Apagar LED de alerta'.\nPara ligar o alarme sonoro do sistema, envie 'Ligar alarme sonoro'. Para desligá-lo, envie 'Desligar alarme sonoro'.\nPara ativar/desativar o modo silencioso, utilize o dashboard do sistema; note que você não deixará de ser notificado de novos movimentos, apenas desativará o alto falante tornando o sistema mais difícil de ser detectado.";
 
@@ -40,7 +39,7 @@ void setupWiFi()
   Serial.print("Conectando-se a ");
   Serial.println(ssid);
 
-  WiFi.mode(WIFI_STA); // Define WiFi como estatico
+  //  WiFi.mode(WIFI_STA); // Define WiFi como estatico
   
   WiFi.begin(ssid, pass); // Inicia rotina de conexao ao WiFi
 
@@ -55,11 +54,11 @@ void setupWiFi()
   Serial.print("WiFi conectado! - Endereco de IP do ESP8266: ");
   Serial.println(WiFi.localIP());
 
-  delay(10);
+  delay(10); // Espera 10 milissegundos
 }
 
 //  Rotina de callback (o que fazer quando receber mensagem MQTT)
-void callback(String topic, byte* message, unsigned int length)
+void callback(char* topic, byte* payload, unsigned int length)
 {
   Serial.print("Mensagem recebida no topico: ");
   Serial.print(topic);
@@ -68,12 +67,12 @@ void callback(String topic, byte* message, unsigned int length)
 
   for (int i = 0; i < length; i++)
   {
-    Serial.print((char)message[i]);
-    messageTemp += (char)message[i];
+    Serial.print((char)payload[i]);
+    messageTemp += (char)payload[i];
   }
   Serial.println();
 
-  if(topic=="remoteAlert/modoSilencioso")
+  if(String(topic) == String("remoteAlert/modoSilencioso"))
   {
     if(messageTemp == "on")
     {
@@ -115,10 +114,13 @@ void reconnectMQTT()
   {
     Serial.print("Tentando conectar cliente ao broker MQTT...");
     
-    WiFi.mode(WIFI_STA); // Define WiFi como estatico
+    //  WiFi.mode(WIFI_STA); // Define WiFi como estatico
+
+    //  Cria id randomico para o cliente
+    String clientId = "ESP8266Client-" + String(random(0xffff), HEX);
 
     // Tenta se conectar e, caso consiga, se inscreve no topico 'remoteAlert/modoSilencioso'
-    if (client.connect("ESP8266ClientRA"))
+    if (client.connect(clientId))
     {
       Serial.println("conectado");  
       
