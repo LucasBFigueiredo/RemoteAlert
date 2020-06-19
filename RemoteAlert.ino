@@ -22,6 +22,10 @@ int loudSpeaker = D3;
 int pirValue = LOW;
 int previousPirValue = LOW;
 
+//  Define valores iniciais para as variáveis de tempo
+long currentTimeMeasure = millis();
+long lastTimeMeasure = 0;
+
 //  Define flags de atuadores inicialmente como false
 bool isPirLEDOn = false;
 bool isLoudSpeakerOn = false;
@@ -241,6 +245,18 @@ void loop()
     tone(loudSpeaker, 1200, 900);
   }
 
+  //  Atualiza variáveis e publica valor do PIR a cada 5 segundos
+  currentTimeMeasure = millis();
+  if (currentTimeMeasure - lastTimeMeasure > 5000)
+  {
+    lastTimeMeasure = currentTimeMeasure;
+    
+    if (pirValue = HIGH)
+      client.publish("remoteAlert/alertaMovimento", "1");
+    else
+      client.publish("remoteAlert/alertaMovimento", "0");
+  }
+
   //  Checa novas mensagens do Telegram 
   if (raBot.getNewMessage(msg) && msg.sender.id == telegramUserId)
   {    
@@ -325,9 +341,6 @@ void loop()
       raBot.sendMessage(telegramUserId, hello);
     }
   }
-
-  //  Publica mensagem contendo valor atual do PIR no tópico remoteAlert/alertaMovimento
-  client.publish("remoteAlert/alertaMovimento", "aaaaaaaaaaa");
   
   //  Espera 0.5 segundos
   delay(500);
