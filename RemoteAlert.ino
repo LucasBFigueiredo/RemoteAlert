@@ -8,7 +8,7 @@ const char* ssid  = ""; // Nome do Wi-Fi
 const char* pass  = "";  // Senha do Wi-Fi
 
 const char* mqttServer = "broker.mqtt-dashboard.com"; // Rota do broker MQTT. Local: '127.0.0.1'. Remoto: 'broker.mqtt-dashboard.com' (broker publico, apenas para testes).
-const int mqttServerPort = ; // Porta do broker MQTT. Local: 1883. Remoto: '1883'.
+const int mqttServerPort = 1883; // Porta do broker MQTT. Local: 1883. Remoto: '1883'.
 
 uint32_t telegramUserId = ;//  Id do usuario do Telegram
 const String telegramToken = "";  // Token do bot do Telegram
@@ -163,18 +163,22 @@ void setup()
   else
     Serial.println("Falha na coneccao, bot Telegram nao conectado!");
 
-  //  Prepara E/S
-  pinMode(pirLED, OUTPUT);
-  pinMode(PIR, INPUT);
-}
+   //  Prepara E/S
+   pinMode(pirLED, OUTPUT);
+   pinMode(PIR, INPUT);
 
+   raBot.sendMessage(telegramUserId, hello); // Envia mensagem do Telegram inicial ao usuario 
+}
 void loop()
 { 
- //  Valida conexão com cliente MQTT e reconecta caso necessario
+  //  Valida conexão com cliente MQTT e reconecta caso necessario
   if (!client.connected()) {
     reconnectMQTT();
   }
-  client.loop();
+
+  if (!client.loop()) {
+    reconnectMQTT();
+  }
   
   //  Lê sensor PIR e atualiza variáveis
   previousPirValue = pirValue;
@@ -323,7 +327,7 @@ void loop()
   }
 
   //  Publica mensagem contendo valor atual do PIR no tópico remoteAlert/alertaMovimento
-  client.publish("remoteAlert/alertaMovimento", (char*)pirValue);
+  client.publish("remoteAlert/alertaMovimento", "aaaaaaaaaaa");
   
   //  Espera 0.5 segundos
   delay(500);
