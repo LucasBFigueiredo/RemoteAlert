@@ -251,7 +251,7 @@ void loop()
   {
     lastTimeMeasure = currentTimeMeasure;
     
-    if (pirValue = HIGH)
+    if (pirValue == HIGH)
       client.publish("remoteAlert/alertaMovimento", "1");
     else
       client.publish("remoteAlert/alertaMovimento", "0");
