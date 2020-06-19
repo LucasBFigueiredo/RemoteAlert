@@ -7,7 +7,7 @@ CTBot raBot;
 const char* ssid  = ""; // Nome do Wi-Fi
 const char* pass  = "";  // Senha do Wi-Fi
 const char* token = "";  // Token do bot do Telegram
-const char* mqttServer = ""; // Rota do broker MQTT. Local: '127.0.0.1'. Remoto: 'broker.mqtt-dashboard.com' (broker publico, apenas para testes).
+const char* mqttServer = "broker.mqtt-dashboard.com"; // Rota do broker MQTT. Local: '127.0.0.1'. Remoto: 'broker.mqtt-dashboard.com' (broker publico, apenas para testes).
 int mqttServerPort = 1883; // Porta do broker MQTT. Local: 1883. Remoto: ''.
 
 //  Define pinos de sensor e atuadores
@@ -120,7 +120,7 @@ void reconnectMQTT()
     String clientId = "ESP8266Client-" + String(random(0xffff), HEX);
 
     // Tenta se conectar e, caso consiga, se inscreve no topico 'remoteAlert/modoSilencioso'
-    if (client.connect(clientId))
+    if(client.connect(clientId.c_str()))
     {
       Serial.println("conectado");  
       
@@ -167,12 +167,11 @@ void setup()
 
 void loop()
 { 
-  //  Valida conexão com cliente MQTT e reconecta caso necessario
+ //  Valida conexão com cliente MQTT e reconecta caso necessario
   if (!client.connected()) {
     reconnectMQTT();
   }
-  if(!client.loop())
-    client.connect("ESP8266ClientRA");
+  client.loop();
   
   //  Lê sensor PIR e atualiza variáveis
   previousPirValue = pirValue;
@@ -238,6 +237,8 @@ void loop()
   //  Checa novas mensagens do Telegram 
   if (raBot.getNewMessage(msg))
   {
+    Serial.println("\nUsuario Telegram:");
+    Serial.println(String(msg.sender.id));
     //  Verifica se nova mensagem é, ignorando capitalização, "Acender LED de alerta"
     if (msg.text.equalsIgnoreCase("Acender LED de alerta"))
     {
