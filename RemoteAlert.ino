@@ -6,9 +6,12 @@ CTBot raBot;
 
 const char* ssid  = ""; // Nome do Wi-Fi
 const char* pass  = "";  // Senha do Wi-Fi
-const char* token = "";  // Token do bot do Telegram
+
 const char* mqttServer = "broker.mqtt-dashboard.com"; // Rota do broker MQTT. Local: '127.0.0.1'. Remoto: 'broker.mqtt-dashboard.com' (broker publico, apenas para testes).
-int mqttServerPort = 1883; // Porta do broker MQTT. Local: 1883. Remoto: ''.
+const int mqttServerPort = ; // Porta do broker MQTT. Local: 1883. Remoto: '1883'.
+
+uint32_t telegramUserId = ;//  Id do usuario do Telegram
+const String telegramToken = "";  // Token do bot do Telegram
 
 //  Define pinos de sensor e atuadores
 int PIR = D2;
@@ -84,7 +87,7 @@ void callback(char* topic, byte* payload, unsigned int length)
       {
        Serial.println("Ativando modo silencioso do sistema.");
        isMuted = true;
-       raBot.sendMessage(msg.sender.id, "RemoteAlert está agora em seu modo silencioso! Para desativar o modo, utilize o dashboard do sistema.\nNote que você não deixará de ser notificado de novos movimentos, apenas desativará o alto falante tornando o sistema mais difícil de ser detectado.");
+       raBot.sendMessage(telegramUserId, "RemoteAlert está agora em seu modo silencioso! Para desativar o modo, utilize o dashboard do sistema.\nNote que você não deixará de ser notificado de novos movimentos, apenas desativará o alto falante tornando o sistema mais difícil de ser detectado.");
       }
     }
     else if(messageTemp == "off")
@@ -93,7 +96,7 @@ void callback(char* topic, byte* payload, unsigned int length)
       {
        Serial.println("Desativando modo silencioso do sistema.");
        isMuted = false;
-       raBot.sendMessage(msg.sender.id, "Modo silencioso desativado! Para ativar o modo, utilize o dashboard do sistema.\nNote que você não deixará de ser notificado de novos movimentos, apenas desativará o alto falante tornando o sistema mais difícil de ser detectado.");
+       raBot.sendMessage(telegramUserId, "Modo silencioso desativado! Para ativar o modo, utilize o dashboard do sistema.\nNote que você não deixará de ser notificado de novos movimentos, apenas desativará o alto falante tornando o sistema mais difícil de ser detectado.");
   
       }
       else
@@ -152,7 +155,7 @@ void setup()
   client.setCallback(callback);
 
   //  Inicializa token do bot Telegram
-  raBot.setTelegramToken(token);
+  raBot.setTelegramToken(telegramToken);
 
   //  Testa conecção com servidor Telegram
   if (raBot.testConnection())
@@ -180,34 +183,34 @@ void loop()
   //  Envia mengagem ao usuário via Telegram caso novo movimento tenha sido detectado
   if (pirValue == HIGH && previousPirValue == LOW)
   {
-    raBot.sendMessage(msg.sender.id, "Alerta de movimento!");
+    raBot.sendMessage(telegramUserId, "Alerta de movimento!");
   }
 
   //  Envia mensagem ao usuário via Telegram caso movimentos deixem de ser detectados
   else if (pirValue == LOW && previousPirValue == HIGH)
   {
-    raBot.sendMessage(msg.sender.id, "Alerta de movimento encerrado!");
+    raBot.sendMessage(telegramUserId, "Alerta de movimento encerrado!");
   }
 
   //  Ativa flag do LED de alerta e envia mensagem ao usuário via Telegram novo movimento tenha sido detectado
   if (!isPirLEDOn && pirValue == HIGH && previousPirValue == LOW) 
   {
     isPirLEDOn = true;
-    raBot.sendMessage(msg.sender.id, "LED de alerta aceso!");
+    raBot.sendMessage(telegramUserId, "LED de alerta aceso!");
   }
   
   //  Desativa flag do LED de alerta e envia mensagem ao usuário via Telegram caso movimentos deixem de ser detectados
   else if (isPirLEDOn && pirValue == LOW && previousPirValue == HIGH) 
   {
     isPirLEDOn = false;
-    raBot.sendMessage(msg.sender.id, "LED de alerta apagado");
+    raBot.sendMessage(telegramUserId, "LED de alerta apagado");
   }
 
   //  Ativa flag do alarme sonoro e envia mensagem ao usuário via Telegram caso novo movimento tenha sido detectado e o sistema não esteja no modo silencioso
   if (!isMuted && !isLoudSpeakerOn && pirValue == HIGH && previousPirValue == LOW)
   {
     isLoudSpeakerOn = true;
-    raBot.sendMessage(msg.sender.id, "Alarme sonoro ligado!");
+    raBot.sendMessage(telegramUserId, "Alarme sonoro ligado!");
 
   }
 
@@ -215,7 +218,7 @@ void loop()
   else if (!isMuted && isLoudSpeakerOn && pirValue == LOW && previousPirValue == HIGH)
   {
     isLoudSpeakerOn = false;
-    raBot.sendMessage(msg.sender.id, "Alarme sonoro desligado!");
+    raBot.sendMessage(telegramUserId, "Alarme sonoro desligado!");
   }
 
   //  Acende LED de alerta caso sua flag esteja ativada ou apaga-o caso contrário
@@ -235,23 +238,21 @@ void loop()
   }
 
   //  Checa novas mensagens do Telegram 
-  if (raBot.getNewMessage(msg))
-  {
-    Serial.println("\nUsuario Telegram:");
-    Serial.println(String(msg.sender.id));
+  if (raBot.getNewMessage(msg) && msg.sender.id == telegramUserId)
+  {    
     //  Verifica se nova mensagem é, ignorando capitalização, "Acender LED de alerta"
     if (msg.text.equalsIgnoreCase("Acender LED de alerta"))
     {
       //  Envia mensagem caso o LED já esteja aceso (flag ativada)
       if(isPirLEDOn)
       {
-        raBot.sendMessage(msg.sender.id, "LED de alerta já aceso! Para apagá-lo, envie 'Apagar LED de alerta'");
+        raBot.sendMessage(telegramUserId, "LED de alerta já aceso! Para apagá-lo, envie 'Apagar LED de alerta'");
       }
       //  Caso contrário, ativa flag e envia mensagem
       else
       {
         isPirLEDOn = true;
-        raBot.sendMessage(msg.sender.id, "LED de alerta aceso!");
+        raBot.sendMessage(telegramUserId, "LED de alerta aceso!");
       }
     }
 
@@ -262,12 +263,12 @@ void loop()
       if(isPirLEDOn)
       {
         isPirLEDOn = false;
-        raBot.sendMessage(msg.sender.id, "LED de alerta apagado!");
+        raBot.sendMessage(telegramUserId, "LED de alerta apagado!");
       }
       //  Caso contrário, envia mensagem 
       else
       {
-        raBot.sendMessage(msg.sender.id, "LED de alerta já apagado! Para acendê-lo, envie 'Acender LED de alerta'");
+        raBot.sendMessage(telegramUserId, "LED de alerta já apagado! Para acendê-lo, envie 'Acender LED de alerta'");
       }    
     }
 
@@ -277,19 +278,19 @@ void loop()
       //  Envia mensagem ao usuário caso o sistema esteja em seu modo silencioso
       if(isMuted)
       {
-        raBot.sendMessage(msg.sender.id, "RemoteAlert está em seu modo silencioso! Para desativar o modo, envie 'Desativar modo silencioso'.\nNote que você não deixará de ser notificado de novos movimentos, apenas desativará o alto falante tornando o sistema mais difícil de ser detectado.");
+        raBot.sendMessage(telegramUserId, "RemoteAlert está em seu modo silencioso! Para desativar o modo, envie 'Desativar modo silencioso'.\nNote que você não deixará de ser notificado de novos movimentos, apenas desativará o alto falante tornando o sistema mais difícil de ser detectado.");
       }
       //  Envia mensagem ao usuário caso o sistema não esteja no modo silencioso, mas o alarme sonoro já esteja ligado
       else if (isLoudSpeakerOn)
       {
-        raBot.sendMessage(msg.sender.id, "Alarme sonoro já ligado! Para desligá-lo, envie 'Desligar alarme sonoro'.");
+        raBot.sendMessage(telegramUserId, "Alarme sonoro já ligado! Para desligá-lo, envie 'Desligar alarme sonoro'.");
 
       }
       //  Caso contrário, liga o alarme sonoro e envia mensagem ao usuário
       else
       {
         isLoudSpeakerOn = true;
-        raBot.sendMessage(msg.sender.id, "Alarme sonoro ligado!");
+        raBot.sendMessage(telegramUserId, "Alarme sonoro ligado!");
       }
     }
 
@@ -299,25 +300,25 @@ void loop()
       //  Envia mensagem ao usuário caso o sistema esteja em seu modo silencioso
       if(isMuted)
       {
-        raBot.sendMessage(msg.sender.id, "RemoteAlert está em seu modo silencioso! Para desativar o modo, envie 'Desativar modo silencioso'.\nNote que você não deixará de ser notificado de novos movimentos, apenas desativará o alto falante tornando o sistema mais difícil de ser detectado.");
+        raBot.sendMessage(telegramUserId, "RemoteAlert está em seu modo silencioso! Para desativar o modo, envie 'Desativar modo silencioso'.\nNote que você não deixará de ser notificado de novos movimentos, apenas desativará o alto falante tornando o sistema mais difícil de ser detectado.");
       }
       //  Desliga o alarme sonoro e envia mensagem ao usuário, caso o sistema não esteja em seu modo silencioso e o alarme sonoro esteja ligado
       else if (isLoudSpeakerOn)
       {
         isLoudSpeakerOn = false;
-        raBot.sendMessage(msg.sender.id, "Alarme sonoro desligado!");
+        raBot.sendMessage(telegramUserId, "Alarme sonoro desligado!");
       }
       //  Envia mensagem ao usuário caso contrário
       else
       {
-        raBot.sendMessage(msg.sender.id, "Alarme sonoro já desligado! Para ligá-lo, envie 'Ligar alarme sonoro'.");
+        raBot.sendMessage(telegramUserId, "Alarme sonoro já desligado! Para ligá-lo, envie 'Ligar alarme sonoro'.");
       }
     }
 
     //  Envia resposta genérica para qualquer outra mensagem
     else
     {
-      raBot.sendMessage(msg.sender.id, hello);
+      raBot.sendMessage(telegramUserId, hello);
     }
   }
 
