@@ -439,10 +439,12 @@ A alimentação do sistema - via sua porta micro USB tipo B - foi realizada plug
 Utilizamos a API do Telegram para criar nosso bot, a partir do _BotFather_.
 Procurando pelo mesmo dentro do telegram, podemos acioná-lo clicando em __START__ após abrir uma conversa com ele.
 Em seguida, enviando o comando __/newbot__, damos início a criação do bot que iremos utilizar para contatar o sistema. 
-Enviamos, então, o nome que iremos dar ao nosso bot (no nosso caso, __a__) e seu nome de usuário do Telegram ().
+Enviamos, então, o nome que iremos dar ao nosso bot (no nosso caso, __BotTesteRemoteAlert__) e seu nome de usuário do Telegram (__BotTesteRemoteAlert_bot__).
+
 ![Telegram Bot Creation](/img/telegramBotCreation.jpeg)
 
 Por fim, recebemos um token do bot criado com sucesso e podemos contatá-lo buscando seu nome dentro do Telegram e enviando __/start__.
+
 ![Telegram Bot Created](/img/telegramBotCreated.jpeg)
 
 ![Telegram Bot Chat](/img/telegramBotChat.jpeg)
@@ -480,7 +482,7 @@ e configuramos seus nós da seguinte forma:
 ![Node-RED switch node](/img/nodeREDSwitch.png)
 
 2. Saída MQTT para o tópico remoteAlert/modoSliencioso
-![Node-RED MQTT out node](/img/nodeREDBMQTTOut.png)
+![Node-RED MQTT out node](/img/nodeREDMQTTOut.png)
 
 3. Entrada MQTT para o tópico remoteAlert/alertaMovimento
 ![Node-RED MQTT in](/img/nodeREDMQTTIn.png)
