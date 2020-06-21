@@ -81,7 +81,7 @@ bool isLoudSpeakerOn = false;
 bool isMuted = false;
 ```
 ### Funções Auxiliares
-A função __setupWifi__ é utilizada para garantir conexão do ESP8266 com a internet, imprimindo o processo da conexão e seu resultado no monitor serial.
+A função __setupWiFi__ é utilizada para garantir conexão do ESP8266 com a internet, imprimindo o processo da conexão e seu resultado no monitor serial.
 ```ino
 //  Conecta ESP8266 ao WiFi
 void setupWiFi() 
@@ -422,7 +422,7 @@ void loop()
 O sistema foi construído com os seguintes materiais:
 * 01 x NodeMCU ESP2866
 * 01 x Sensor PIR HC-SR501
-* 01 x Buzzer simples
+* 01 x Buzzer (Piezo)
 * 01 x LED amarelo
 * 02 x Resistor 330 ohms
 * 01 x Protoboard 400 pontos
