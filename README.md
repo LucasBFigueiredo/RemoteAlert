@@ -421,7 +421,7 @@ void loop()
 ## Hardware
 O sistema foi construído com os seguintes materiais:
 * 01 x NodeMCU ESP2866
-* 01 x Sensor PIR
+* 01 x Sensor PIR HC-SR501
 * 01 x Buzzer simples
 * 01 x LED amarelo
 * 02 x Resistor 330 ohms
