@@ -1,15 +1,15 @@
 [
     {
-        "id": "1ca39ac2.18f565",
+        "id": "a0a640f0.4fc18",
         "type": "tab",
         "label": "Flow 1",
         "disabled": false,
         "info": ""
     },
     {
-        "id": "65cd5cb.d4d7ea4",
+        "id": "6f6cde0a.9c473",
         "type": "ui_switch",
-        "z": "1ca39ac2.18f565",
+        "z": "a0a640f0.4fc18",
         "name": "ModoSilencioso",
         "label": "Liga/Desliga MS",
         "tooltip": "Ativa ou desativa o modo silencioso do sistema",
@@ -33,14 +33,14 @@
         "y": 120,
         "wires": [
             [
-                "3e28d8e2.e256b8"
+                "3e2d8de4.90bc62"
             ]
         ]
     },
     {
-        "id": "3e28d8e2.e256b8",
+        "id": "3e2d8de4.90bc62",
         "type": "mqtt out",
-        "z": "1ca39ac2.18f565",
+        "z": "a0a640f0.4fc18",
         "name": "ModoSilencioso",
         "topic": "remoteAlert/modoSilencioso",
         "qos": "2",
@@ -51,9 +51,9 @@
         "wires": []
     },
     {
-        "id": "894d177d.d12478",
+        "id": "8ac635b7.83d7a8",
         "type": "mqtt in",
-        "z": "1ca39ac2.18f565",
+        "z": "a0a640f0.4fc18",
         "name": "AlertaMovimento",
         "topic": "remoteAlert/alertaMovimento",
         "qos": "2",
@@ -63,14 +63,14 @@
         "y": 260,
         "wires": [
             [
-                "da3dac00.215a18"
+                "9af39e5c.96051"
             ]
         ]
     },
     {
-        "id": "da3dac00.215a18",
+        "id": "9af39e5c.96051",
         "type": "ui_chart",
-        "z": "1ca39ac2.18f565",
+        "z": "a0a640f0.4fc18",
         "name": "AlertaMovimento",
         "group": "3898b42b.f4916c",
         "order": 0,
@@ -126,7 +126,7 @@
         "type": "mqtt-broker",
         "z": "",
         "name": "",
-        "broker": "localhost",
+        "broker": "broker.mqtt-dashboard.com",
         "port": "1883",
         "clientid": "",
         "usetls": false,

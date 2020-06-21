@@ -19,6 +19,8 @@ O sistema irá alertar o usuário sempre que detectar novos movimentos através 
 
 O sistema também conta com um _dashboard_ contendo um gráfico indicando o estado do sensor de movimento nas últimas 24hs e um botão para ativar e desativar o modo silencioso do sistema - no qual o alarme sonoro está sempre desativado e, quando ocorre nova detecção de movimento, são acionados apenas o LED de alerta e a mensagem do Telegram. O _dashboard_ foi implementado no Node-RED, se comunicando com o sistema via protocolo MQTT utilizando o _broker_ público __broker.mqtt-dashboard.com__.
 
+Um vídeo demonstrando o sistema em funcionamento se encontra disponível em https://youtu.be/PSYkpyM_V9E.
+
 ## Software
 ### Bibliotecas
 Utilizamos 3 bibliotecas no projeto: 
@@ -428,13 +430,30 @@ O sistema foi construído com os seguintes materiais:
 * 10 x Jumper macho-fêmea
 
 Seguindo o circuito abaixo como modelo:
-![Circuito fritzing](/circuitoRemoteAlert.jpeg)
+![Circuito fritzing](/img/circuitoRemoteAlert.jpeg)
 
 A alimentação do sistema - via sua porta micro USB tipo B - foi realizada plugando-o ao mesmo notebook no qual o software foi desenvolvido na IDE do Arduino e o dashboard do Node-RED foi acessado.
 
 ## Interfaces, Protocolos e Módulos de Comunicação
 ### Telegram Bot
-_Descrição bot Telegram_
+Utilizamos a API do Telegram para criar nosso bot, a partir do _BotFather_.
+Procurando pelo mesmo dentro do telegram, podemos acioná-lo clicando em __START__ após abrir uma conversa com ele.
+Em seguida, enviando o comando __/newbot__, damos início a criação do bot que iremos utilizar para contatar o sistema. 
+Enviamos, então, o nome que iremos dar ao nosso bot (no nosso caso, __a__) e seu nome de usuário do Telegram ().
+![Telegram Bot Creation](/img/telegramBotCreation.jpeg)
+
+Por fim, recebemos um token do bot criado com sucesso e podemos contatá-lo buscando seu nome dentro do Telegram e enviando __/start__.
+![Telegram Bot Created](/img/telegramBotCreated.jpeg)
+
+![Telegram Bot Chat](/img/telegramBotChat.jpeg)
+
+Tendo nosso bot, podemos utilizar a biblioteca CTBot para instanciá-lo (criando um objeto identificado pelo mesmo token do bot criado através do _BotFather_) e utilizar suas funcionalidades básicas de envio e recebimento de mensagens.
+
+Como temos acesso ao conteúdo das mensagens recebidas, podemos realizar tarefas dentro do sistema acionadas via comandos enviados pelo usuário no Telegram comparando tal conteúdo com Strings predefinidas e mapeadas a ações específicas (neste caso, a controlar os atuadores do sistema).
+
+O bot também foi utilizado para enviar mensagens para o usuário, não somente oferecendo-o um feedback sobre a execução dos comandos que o mesmo enviar ao sistema, mas também servindo como um alerta remoto do sistema caso o sensor PIR detecte algum movimento novo.
+
+Obs.: Optamos por verificar também o id do usuário que enviou a mensagem ao bot para que o sistema não possa receber comandos de usuários desconhecidos. Isto foi feito acessando as propriedades do objeto de mensagem (TBMessage) recebido e identificado pelo nosso bot (CTBot).
 
 ### MQTT
 O protocolo MQTT (implementado em cima do protocolo TCP/IP) foi utilizado para comunicação do sistema com seu dashboard do Node-RED via a internet. 
@@ -443,8 +462,31 @@ A implementação foi feita utilizando a biblioteca PubSubClient, que nos permit
 
 Os tópicos utilizados foram:
 1. __remoteAlert/alertaMovimento__: neste tópico, no qual inscrevemos parte do fluxo do Node-RED, o ESP8266 publica uma mensagem contendo o estado atual do sensor PIR (1 se estiver detectando movimento e 0 caso contrário) de 5 em 5 segundos, permitindo a criação de um gráfico da atividade do sistema que mantém um histórico das últimas 24 horas.
-2. __remoteAlert/modoSonoro__: neste tópico, no qual inscrevemos o ESP8266, utilizamos um botão do _dashboard_ do Node-RED para publicar 
+2. __remoteAlert/modoSliencioso__: neste tópico, no qual inscrevemos o ESP8266, utilizamos um botão do _dashboard_ do Node-RED para publicar 
 uma mensagem referente a ativação do modo silencioso do sistema ("on" para ativado, "off" para desativado).
 
 ### Node-RED
-_Descrição do uso do Node-RED_
+Para comunicação com o sistema via MQTT, optamos por construir um fluxo com a ferramenta Node-RED para gerar um _dashboard_ contendo o gráfico das últimas 24hs de atividade do sistema e também um botão para controlar o modo silencioso do mesmo.
+
+Com o Node-RED rodando localmente na porta 1880, acessamos sua interface web, importamos a biblioteca __node-red-dashboard__ através de seu gerenciador, e construímos o seguinte fluxo:
+![Node-RED flow](/img/nodeREDFlow.png)
+
+Configuramos, para sua demonstração, o broker público anteriormente mencionado
+![Node-RED broker](/img/nodeREDBroker.png)
+
+e configuramos seus nós da seguinte forma:
+
+1. Botão liga-desliga do modo silencioso
+![Node-RED switch node](/img/nodeREDSwitch.png)
+
+2. Saída MQTT para o tópico remoteAlert/modoSliencioso
+![Node-RED MQTT out node](/img/nodeREDBMQTTOut.png)
+
+3. Entrada MQTT para o tópico remoteAlert/alertaMovimento
+![Node-RED MQTT in](/img/nodeREDMQTTIn.png)
+
+4. Gráfico contendo as últimas 24hs dos valores detectados pelo sensor PIR do sistema
+![Node-RED chart node](/img/nodeREDChart.png)
+
+Após o _deploy_ podemos acessar sua interface gráfica (_dashboard_), que tem a seguinte forma:
+![Node-RED dashboard](/img/nodeREDDashboard.png)
