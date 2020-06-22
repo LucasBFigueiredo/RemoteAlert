@@ -19,7 +19,7 @@ O sistema irá alertar o usuário sempre que detectar novos movimentos através 
 
 O sistema também conta com um _dashboard_ contendo um gráfico indicando o estado do sensor de movimento nas últimas 24hs e um botão para ativar e desativar o modo silencioso do sistema - no qual o alarme sonoro está sempre desativado e, quando ocorre nova detecção de movimento, são acionados apenas o LED de alerta e a mensagem do Telegram. O _dashboard_ foi implementado no Node-RED, se comunicando com o sistema via protocolo MQTT utilizando o _broker_ público __broker.mqtt-dashboard.com__.
 
-Um vídeo demonstrando o sistema em funcionamento se encontra disponível em https://youtu.be/PSYkpyM_V9E.
+Um vídeo demonstrando o sistema em funcionamento se encontra disponível em https://youtu.be/ib0RdaIqHKQ.
 
 ## Software
 ### Bibliotecas
